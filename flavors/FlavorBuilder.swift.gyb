@@ -1,0 +1,58 @@
+%{
+
+    def generics_list(count):
+        return build_list("C{0}", count)
+
+    def arguments_list(count):
+        return build_list("c{0}", count)
+
+    def parameters_list(count):
+        return build_list("_ c{0}: C{0}", count)
+
+    def where_list(count):
+        return build_list("C{0}: Flavor", count)
+    
+    def build_list(string_format, count):
+        return ", ".join(list(map(lambda x: string_format.format(x), range(count))))
+        
+    max_number_of_Flavors = 10
+
+}%
+
+@resultBuilder
+struct FlavorBuilder {
+    
+    static func buildBlock<Content>(_ content: Content) -> Content where Content: Flavor {
+        print(#function)
+        return content
+    }
+    
+    static func buildIf<Content>(_ content: Content?) -> Content? where Content: Flavor {
+        print(#function)
+        return content
+    }
+    
+    static func buildEither<TrueContent, FalseContent>(first: TrueContent) -> ConditionalContent<TrueContent, FalseContent> {
+        print(#function)
+        return .init(storage: .trueContent(first))
+    }
+    
+    static func buildEither<TrueContent, FalseContent>(second: FalseContent) -> ConditionalContent<TrueContent, FalseContent> {
+        print(#function)
+        return .init(storage: .falseContent(second))
+    }
+
+    % for count in range(2, max_number_of_Flavors+1):
+    static func buildBlock<${ generics_list(count) }>(${ parameters_list(count) }) -> TupleFlavor<(${ generics_list(count) })> where ${ where_list(count) } {
+        print(#function)
+        return .init((${ arguments_list(count) }))
+    }
+    
+    % end
+    static func buildFinalResult<Content>(_ content: Content) -> Content where Content: Flavor {
+        print(#function)
+        print("\t", "-", type(of: content))
+        return content
+    }
+
+}
